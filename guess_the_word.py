@@ -1,39 +1,75 @@
+# Dante Solorzano
+# CIS256 Fall 2024
+# EX 3.4(EX 3.4)
+
 import random
 
-words = ["Apple", "Peach", "Blueberry", "Strawberry", "Mango", "Durian", "Tomato"]
-guessed_letters = []
-word = random.choice(words).lower() #ensures that guesses are not case sensitive
-available_attempts = 5 
-attempts = 0
-
-def build_word():
-    built_word= ''
-    return built_word.join(x if x in guessed_letters else '_' for x in word)
-
-
-def start():
-    global attempts
-    print("Start!")
-    while True:
-        if (available_attempts != attempts):
-            built_word = build_word()
-            print(built_word)
-            if ("_" in built_word):
-                print("Guesses remaining: " + str(available_attempts - attempts))
-                user_letter = input("Make a guess! Please only insert a letter: ").lower()
-                if (len(user_letter) == 1):
-                    attempts += 1
-                    guessed_letters.append(user_letter)
-                    
-                    print('wa')
-                else:
-                    print('Please only insert a letter!')
-            else:
-                print("You win!")
+class Hangman:
+    def __init__(self, testing_pool = None): # Needs a default to prevent crash when not providing for tests
+        self.max_attempts = 6
+        self.attempts = self.max_attempts
+        if (testing_pool != None):
+            self.words = testing_pool
         else:
-            print("You lost!")
-            break
+            self.words = ["Apple", "Peach", "Blueberry", "Strawberry", "Mango", "Durian", "Tomato"]
+        self.congratulatory_words = ["Nice!", "Awesome,", "Sweet!", "Good job!"] 
+        self.word = ''
+        self.guessed_letters = set()
+        self.won = False
+    
+    def new(self):
+        self.word = random.choice(self.words).lower()
+        # self.guessed_letters = set()
+        self.attempts = self.max_attempts
+        self.won = False
+        return self.vanity()
+    
+    def vanity(self): # meant to be used for the player to see progress of word in terminal
+        vanity_word = ''
+        for letter in self.word:
+            if letter in self.guessed_letters:
+                vanity_word = vanity_word + letter
+            else:
+                vanity_word = vanity_word + '_'
+        return vanity_word
+    
+    def guess(self, letter):
+        if letter in self.guessed_letters:
+            return "Cannot guess the same letter twice!"
+        
+        self.guessed_letters.add(letter)
+        
+        if letter in self.word:
+            if set(self.word) <= self.guessed_letters: # a bit of a smart way of using sets to check win status! ONLY supports sets comparing each other.
+                self.won = True
+                return "Winner! word: " + self.word
+            random_celebration = random.choice(self.congratulatory_words)
+            return random_celebration + " Correct guess!"
+        else:
+            self.attempts -= 1
+            if self.attempts == 0:
+                return f"Match! The word was: '{self.word}'. Better luck next time!"
+            return f"Wrong! {self.attempts} attempts left"
+    
+    def is_over(self):
+        return self.won or self.attempts == 0
 
+def play():
+    game = Hangman()
+    print(game.new()) # generates game and returns vanity for terminal
+    
+    while not game.is_over():
+        print()
+        guess = input("Guess a letter, and only a letter: ").strip().lower()
+        if len(guess) != 1:
+            print("Enter only a single letter!")
+            continue
+            
+        res = game.guess(guess)
+        print(res)
+        if 'Winner!' in res:
+            return
+        print("Current word:", game.vanity())
 
 if __name__ == "__main__":
-    start()
+    play()
